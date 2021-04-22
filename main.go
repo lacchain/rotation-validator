@@ -3,9 +3,9 @@ package main
 import(
 	"os"
     "github.com/spf13/viper"
-	"github.com/lacchain/rotation-validators/model"
-	"github.com/lacchain/rotation-validators/service"
-	"github.com/lacchain/rotation-validators/audit"
+	"github.com/lacchain/rotation-validator/model"
+	"github.com/lacchain/rotation-validator/service"
+	"github.com/lacchain/rotation-validator/audit"
 )
 
 var config *model.Config

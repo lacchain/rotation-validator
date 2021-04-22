@@ -3,11 +3,11 @@ package blockchain
 import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/lacchain/rotation-validators/errors"
-	"github.com/lacchain/rotation-validators/audit"
+	"github.com/lacchain/rotation-validator/errors"
+	"github.com/lacchain/rotation-validator/audit"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	relay "github.com/lacchain/rotation-validators/blockchain/contracts"
+	relay "github.com/lacchain/rotation-validator/blockchain/contracts"
 )
 
 //Client to manage Connection to Ethereum

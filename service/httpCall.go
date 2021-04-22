@@ -8,8 +8,8 @@ import(
 	"io/ioutil"
 	"net/http"
 	"time"
-	"github.com/lacchain/rotation-validators/rpc"
-	"github.com/lacchain/rotation-validators/audit"
+	"github.com/lacchain/rotation-validator/rpc"
+	"github.com/lacchain/rotation-validator/audit"
 )
 
 func vote(id string, address string, kind bool) *rpc.JsonrpcMessage{
@@ -45,11 +45,14 @@ func vote(id string, address string, kind bool) *rpc.JsonrpcMessage{
 
 	rdr1 := ioutil.NopCloser(bytes.NewBuffer(body))
 
-	fmt.Println("Response body : ", rdr1)
+	var rpcMessage rpc.JsonrpcMessage
 
-	jsonResponse := new(rpc.JsonrpcMessage)
+	err = json.NewDecoder(rdr1).Decode(&rpcMessage)
+	if err != nil {
+		handleError(id,err)
+	}
 
-	return jsonResponse.Response(response)
+	return &rpcMessage
 }
 
 //HandleError

@@ -15,11 +15,11 @@ import (
 	"io/ioutil"
 	"encoding/hex"
 	"crypto/ecdsa"
-	"github.com/lacchain/rotation-validators/model"
-	"github.com/lacchain/rotation-validators/errors"
-	"github.com/lacchain/rotation-validators/audit"
-	"github.com/lacchain/rotation-validators/rpc"
-	bl "github.com/lacchain/rotation-validators/blockchain"
+	"github.com/lacchain/rotation-validator/model"
+	"github.com/lacchain/rotation-validator/errors"
+	"github.com/lacchain/rotation-validator/audit"
+	"github.com/lacchain/rotation-validator/rpc"
+	bl "github.com/lacchain/rotation-validator/blockchain"
 	sha "golang.org/x/crypto/sha3"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/common"
@@ -94,11 +94,13 @@ func (service *RotationService) ProcessEvents(){
 				var wg sync.WaitGroup
 				results := make(chan *rpc.JsonrpcMessage)
 				done := make(chan interface{})
-				defer close(done)
 				wg.Add(2)
 				go service.removeValidators(done, &wg, results)
 				go service.voteByValidators(done, &wg, results)
+				go service.checkResults(results)
 				wg.Wait()
+				close(done)
+				
 			}
         }
     }
@@ -141,15 +143,19 @@ func (service *RotationService) voteByValidators(done <-chan interface{}, wg *sy
 		HandleError(err)
 	}
 	for id, validator := range newValidators{
-
 		resp := vote(string(id+100), validator, true)
-		
 		select {            
 			case <-done: 
 				return            
 			case results <- resp:            
 		}
 	} 
+}
+
+func (service *RotationService) checkResults(results <-chan *rpc.JsonrpcMessage){
+	for result := range results{
+		fmt.Println("result:",result.String())
+	}
 }
 
 //HandleError ...

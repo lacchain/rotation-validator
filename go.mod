@@ -1,4 +1,4 @@
-module github.com/lacchain/rotation-validators
+module github.com/lacchain/rotation-validator
 
 go 1.13
 
