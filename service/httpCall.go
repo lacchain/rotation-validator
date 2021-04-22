@@ -12,7 +12,7 @@ import(
 	"github.com/lacchain/rotation-validator/audit"
 )
 
-func vote(id string, address string, kind bool) *rpc.JsonrpcMessage{
+func vote(rpcURL string, id string, address string, kind bool) *rpc.JsonrpcMessage{
 	data := fmt.Sprintf(`{"jsonrpc":"2.0","method":"ibft_proposeValidatorVote",
 	"params":["%s",%t], "id":"%s"}`,address,kind,id)
 
@@ -23,7 +23,7 @@ func vote(id string, address string, kind bool) *rpc.JsonrpcMessage{
 		Timeout: timeout,
 	}
 
-	request, err := http.NewRequest("POST", "http://34.75.159.76:4545", bytes.NewBuffer(requestBody))
+	request, err := http.NewRequest("POST", rpcURL, bytes.NewBuffer(requestBody))
 	request.Header.Set("Content-type","application/json")
 
 	if err != nil {

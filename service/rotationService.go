@@ -62,7 +62,7 @@ func (service *RotationService) Init(_config *model.Config) error{
 //ProcessEvents from blockchain
 func (service *RotationService) ProcessEvents(){
 	client := new(bl.Client)
-	err := client.Connect(service.Config.Application.NodeURL)
+	err := client.Connect(service.Config.Application.WSURL)
 	if err != nil {
 		HandleError(err)
 	}
@@ -109,7 +109,7 @@ func (service *RotationService) ProcessEvents(){
 func (service *RotationService) removeValidators(done <-chan interface{}, wg *sync.WaitGroup, results chan<- *rpc.JsonrpcMessage){
 	defer wg.Done()
 	client := new(bl.Client)
-	err := client.Connect(service.Config.Application.NodeURL)
+	err := client.Connect(service.Config.Application.WSURL)
 	if err != nil {
 		HandleError(err)
 	}
@@ -120,7 +120,7 @@ func (service *RotationService) removeValidators(done <-chan interface{}, wg *sy
 	}
 	for id, validator := range oldValidators{
 		fmt.Println("index:",id+10)
-		resp := vote(strconv.Itoa(id+1), validator, false)
+		resp := vote(service.Config.Application.RPCURL, strconv.Itoa(id+1), validator, false)
 		
 		select {            
 			case <-done: 
@@ -133,7 +133,7 @@ func (service *RotationService) removeValidators(done <-chan interface{}, wg *sy
 func (service *RotationService) voteByValidators(done <-chan interface{}, wg *sync.WaitGroup, results chan<- *rpc.JsonrpcMessage){
 	defer wg.Done()
 	client := new(bl.Client)
-	err := client.Connect(service.Config.Application.NodeURL)
+	err := client.Connect(service.Config.Application.WSURL)
 	if err != nil {
 		HandleError(err)
 	}
@@ -143,7 +143,7 @@ func (service *RotationService) voteByValidators(done <-chan interface{}, wg *sy
 		HandleError(err)
 	}
 	for id, validator := range newValidators{
-		resp := vote(string(id+100), validator, true)
+		resp := vote(service.Config.Application.RPCURL, string(id+100), validator, true)
 		select {            
 			case <-done: 
 				return            
