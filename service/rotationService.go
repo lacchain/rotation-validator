@@ -27,7 +27,9 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
-//RelaySignerService is the main service
+const rotationStartedEvent = "RotationStarted(uint256)"
+
+//RotationService is the main service
 type RotationService struct {
 	// The service's configuration
 	Config *model.Config
@@ -39,19 +41,23 @@ func (service *RotationService) Init(_config *model.Config) error{
 	key, err := ioutil.ReadFile(service.Config.Application.NodeKeyPath)
     if err != nil {
 		msg := "fail to read key file"
-		err = errors.FailedReadFile.Wrapf(err,msg, -32602)
+		err = errors.FailedReadFile.Wrapf(err,msg, -32600)
         return err
 	}
 
 	privateKey, err := crypto.HexToECDSA(string(key[2:66]))
     if err != nil {
-        audit.GeneralLogger.Fatal(err)
+		msg := "fail to convert Hex to ECDSA"
+		err = errors.FailedKeystore.Wrapf(err,msg, -32601)
+        return err
 	}
 
 	publicKey := privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
     if !ok {
-        audit.GeneralLogger.Fatal("error casting public key to ECDSA")
+		msg := "error casting public key to ECDSA"
+		err = errors.FailedKeystore.Wrapf(err,msg, -32601)
+        return err
 	}
 	
 	service.Config.Application.NodeAddress = crypto.PubkeyToAddress(*publicKeyECDSA).Hex()[2:]
@@ -64,7 +70,7 @@ func (service *RotationService) ProcessEvents(){
 	client := new(bl.Client)
 	err := client.Connect(service.Config.Application.WSURL)
 	if err != nil {
-		HandleError(err)
+		audit.GeneralLogger.Fatal(err)
 	}
 	defer client.Close()
 	contractAddress := common.HexToAddress(service.Config.Application.ContractAddress)
@@ -79,16 +85,15 @@ func (service *RotationService) ProcessEvents(){
     }
 
 	d := sha.NewLegacyKeccak256()
-	d.Write([]byte("RotationStarted(uint256)"))
+	d.Write([]byte(rotationStartedEvent))
 
 	eventRotationStarted := hex.EncodeToString(d.Sum(nil))
 
     for {
         select {
         case err := <-sub.Err():
-            audit.GeneralLogger.Fatal(err)
+            HandleError(err)
         case vLog := <-logs:
-            audit.GeneralLogger.Println(vLog)
 			audit.GeneralLogger.Println("event:",vLog.Topics[0].Hex())
 			if vLog.Topics[0].Hex() == "0x"+eventRotationStarted {
 				var wg sync.WaitGroup
@@ -100,7 +105,6 @@ func (service *RotationService) ProcessEvents(){
 				go service.checkResults(results)
 				wg.Wait()
 				close(done)
-				
 			}
         }
     }
@@ -119,11 +123,11 @@ func (service *RotationService) removeValidators(done <-chan interface{}, wg *sy
 		HandleError(err)
 	}
 	for id, validator := range oldValidators{
-		fmt.Println("index:",id+10)
-		resp := vote(service.Config.Application.RPCURL, strconv.Itoa(id+1), validator, false)
+		resp := vote(service.Config.Application.RPCURL, strconv.Itoa(id+10), validator, false)
 		
 		select {            
 			case <-done: 
+				audit.GeneralLogger.Println("exiting from removeValidators")
 				return            
 			case results <- resp:            
 		}
@@ -143,9 +147,10 @@ func (service *RotationService) voteByValidators(done <-chan interface{}, wg *sy
 		HandleError(err)
 	}
 	for id, validator := range newValidators{
-		resp := vote(service.Config.Application.RPCURL, string(id+100), validator, true)
+		resp := vote(service.Config.Application.RPCURL, strconv.Itoa(id+100), validator, true)
 		select {            
 			case <-done: 
+				audit.GeneralLogger.Println("saliendo from voteByValidators")
 				return            
 			case results <- resp:            
 		}
