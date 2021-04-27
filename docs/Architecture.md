@@ -25,10 +25,19 @@ This smart contract is in charge of recording the new nodes that will be validat
 ## Behavior
 
 ### Record a node which will/won't be validator
+
+![Add_Remove_Validator](images/add_remove_validator.png)
+
 Based on the metrics sent to the server, it is chosen which node will be added and which will not be part of the consensus in the next round of blocks. Validator address is registered in the Rotation smart contract.
 
 ### Start Validators Rotation
+
+![Execute_Rotation](images/execute_rotation.png)
+
 The server is verifying which is the last block generated in the blockchain. In case the last block is the one indicated to start the rotation, then the server sends a transaction to the blockchain, with which the validator rotation will start.
 
 ### Vote for add/remove validator
+
+![Vote_Validator](images/vote_validator.png)
+
 Validator nodes assisted by the client component are listening for events. When the rotationStarted event is emitted then the client concurrently uses this [ibft-api](https://besu.hyperledger.org/en/stable/Reference/API-Methods/#ibft_proposevalidatorvote) and begins to send the requests to the blockchain node, which will remove and add validators to the next round of block generation.
