@@ -3,6 +3,7 @@ package blockchain
 import (
 	"fmt"
 	"context"
+	"crypto/ecdsa"
 	"math/big"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/lacchain/rotation-validator/server/errors"
@@ -42,62 +43,60 @@ func (ec *Client) GetEthclient()(*ethclient.Client) {
 	return ec.client
 }
 
-//GetOldValidators
-func (ec *Client) GetOldValidators(contractAddress common.Address)([]string, error){
-	contract, err := relay.NewRelay(contractAddress, ec.client)
+//ConfigTransaction from ethereum address contract
+func (ec *Client) ConfigTransaction(key *ecdsa.PrivateKey) (*bind.TransactOpts, error) {
+	auth := bind.NewKeyedTransactor(key)
+
+	nonce, err := ec.client.PendingNonceAt(context.Background(), auth.From)
 	if err != nil {
-		msg := fmt.Sprintf("can't instance Rotation contract %s", contractAddress)
-		err = errors.FailedContract.Wrapf(err, msg, -32603)
+		msg := fmt.Sprintf("can't get pending nonce for:%s", auth.From)
+		err = errors.FailedConfigTransaction.Wrapf(err, msg, -32603)
 		return nil, err
 	}
 
-	audit.GeneralLogger.Println("Rotation Contract instanced:", contractAddress.Hex())
-
-	oldValidators, err := contract.GetOldValidators(&bind.CallOpts{})
+	gasPrice, err := ec.client.SuggestGasPrice(context.Background())
 	if err != nil {
-		msg := "failed get old Validators"
-		err = errors.CallBlockchainFailed.Wrapf(err, msg, -32603)
+		msg := "can't get gas price suggested"
+		err = errors.FailedConfigTransaction.Wrapf(err, msg, -32603)
 		return nil, err
 	}
 
-	fmt.Println("oldValidators:",len(oldValidators))
+	auth.Nonce = big.NewInt(int64(nonce))
+	auth.Value = big.NewInt(0)                // in wei
+	auth.GasLimit = gasPrice.Uint64() * 2 // in units
+	auth.GasPrice = gasPrice
 
-	validators := make([]string, len(oldValidators))
+	audit.GeneralLogger.Printf("OptionsTransaction=[From:0x%x,nonce:%d,gasPrice:%s,gasLimit:%d", auth.From, nonce, gasPrice, auth.GasLimit)
 
-	for i,validator := range oldValidators{
-		validators[i] = validator.Hex()[2:]
-	}
-
-	return validators, nil
+	return auth, nil
 }
 
-//GetOldValidators
-func (ec *Client) GetNewValidators(contractAddress common.Address)([]string, error){
-	contract, err := relay.NewRelay(contractAddress, ec.client)
+//InitRotation
+func (ec *Client) InitRotation(contractAddress common.Address, options *bind.TransactOpts)(error){
+	contract, err := relay.NewContract(contractAddress, ec.client)
 	if err != nil {
 		msg := fmt.Sprintf("can't instance Rotation contract %s", contractAddress)
 		err = errors.FailedContract.Wrapf(err, msg, -32603)
-		return nil, err
+		return err
 	}
 
 	audit.GeneralLogger.Println("Rotation Contract instanced:", contractAddress.Hex())
 
-	newValidators, err := contract.GetNewValidators(&bind.CallOpts{})
+	transaction, err := contract.ExecuteRotation(options)
 	if err != nil {
-		msg := "failed get old Validators"
+		msg := "failed execute rotation"
 		err = errors.CallBlockchainFailed.Wrapf(err, msg, -32603)
-		return nil, err
+		return err
 	}
 
-	fmt.Println("newValidators:",len(newValidators))
-
-	validators := make([]string, len(newValidators))
-
-	for i,validator := range newValidators{
-		validators[i] = validator.Hex()[2:]
+	if len(transaction.Hash()) == 0 {
+		msg := "failed executing transaction relay Metatransaction"
+		err = errors.FailedTransaction.Wrapf(err, msg, -32603)
+		return err
 	}
+	audit.GeneralLogger.Printf("Transaction sent: %s", transaction.Hash().Hex())
 
-	return validators, nil
+	return nil
 }
 
 //GetBlockNumber ...

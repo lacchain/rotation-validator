@@ -8,25 +8,17 @@
 package service
 
 import (
-	"fmt"
-	"sync"
-	"context"
-	"strconv"
 	"io/ioutil"
-	"encoding/hex"
+	"math/big"
 	"crypto/ecdsa"
 	"github.com/lacchain/rotation-validator/server/model"
 	"github.com/lacchain/rotation-validator/server/errors"
 	"github.com/lacchain/rotation-validator/server/audit"
 	bl "github.com/lacchain/rotation-validator/server/blockchain"
-	sha "golang.org/x/crypto/sha3"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/core/types"
 )
-
-const rotationStartedEvent = "RotationStarted(uint256)"
 
 //RotationService is the main service
 type RotationService struct {
@@ -64,102 +56,60 @@ func (service *RotationService) Init(_config *model.Config) error{
 	return nil
 }
 
-//ProcessEvents from blockchain
-func (service *RotationService) ProcessEvents(){
+//ExecuteRotation of validators
+func (service *RotationService) ExecuteRotation() {
 	client := new(bl.Client)
 	err := client.Connect(service.Config.Application.WSURL)
 	if err != nil {
-		audit.GeneralLogger.Fatal(err)
+		HandleError(err)
 	}
 	defer client.Close()
-	contractAddress := common.HexToAddress(service.Config.Application.ContractAddress)
-    query := ethereum.FilterQuery{
-        Addresses: []common.Address{contractAddress},
-    }
-
-    logs := make(chan types.Log)
-    sub, err := client.GetEthclient().SubscribeFilterLogs(context.Background(), query, logs)
+	
+	privateKey, err := crypto.HexToECDSA(service.Config.Application.Key)
     if err != nil {
         audit.GeneralLogger.Fatal(err)
-    }
+	}
+	
+	options, err := client.ConfigTransaction(privateKey)
+	if err != nil {
+		HandleError(err)
+	}
+	contractAddress := common.HexToAddress(service.Config.Application.ContractAddress)
 
-	d := sha.NewLegacyKeccak256()
-	d.Write([]byte(rotationStartedEvent))
-
-	eventRotationStarted := hex.EncodeToString(d.Sum(nil))
-
-    for {
-        select {
-        case err := <-sub.Err():
-            HandleError(err)
-        case vLog := <-logs:
-			audit.GeneralLogger.Println("event:",vLog.Topics[0].Hex())
-			if vLog.Topics[0].Hex() == "0x"+eventRotationStarted {
-				var wg sync.WaitGroup
-				results := make(chan *rpc.JsonrpcMessage)
-				done := make(chan interface{})
-				wg.Add(2)
-				go service.removeValidators(done, &wg, results)
-				go service.voteByValidators(done, &wg, results)
-				go service.checkResults(results)
-				wg.Wait()
-				close(done)
-			}
-        }
-    }
+	err = client.InitRotation(contractAddress, options)
+	if err != nil {
+		HandleError(err)
+	}
 }
 
-func (service *RotationService) removeValidators(done <-chan interface{}, wg *sync.WaitGroup, results chan<- *rpc.JsonrpcMessage){
-	defer wg.Done()
+//GetHeaderBlock of blockchain
+func (service *RotationService) GetHeaderBlock() (*big.Int,error){
 	client := new(bl.Client)
 	err := client.Connect(service.Config.Application.WSURL)
 	if err != nil {
 		HandleError(err)
 	}
 	defer client.Close()
-	oldValidators,err := client.GetOldValidators(common.HexToAddress(service.Config.Application.ContractAddress))
-	if err != nil {
-		HandleError(err)
+	
+	header, err := client.GetHeaderBlock()
+
+	if err!=nil{
+		return nil, err
 	}
-	for id, validator := range oldValidators{
-		resp := vote(service.Config.Application.RPCURL, strconv.Itoa(id+10), validator, false)
-		
-		select {            
-			case <-done: 
-				audit.GeneralLogger.Println("exiting from removeValidators")
-				return            
-			case results <- resp:            
-		}
-	}
+
+	return header, nil
 }
 
-func (service *RotationService) voteByValidators(done <-chan interface{}, wg *sync.WaitGroup, results chan<- *rpc.JsonrpcMessage){
-	defer wg.Done()
+//GetBlockNumber of blockchain
+func (service *RotationService) GetBlockNumber(blockNumber *big.Int) (bool,*types.Block){
 	client := new(bl.Client)
 	err := client.Connect(service.Config.Application.WSURL)
 	if err != nil {
 		HandleError(err)
 	}
 	defer client.Close()
-	newValidators,err := client.GetNewValidators(common.HexToAddress(service.Config.Application.ContractAddress))
-	if err != nil {
-		HandleError(err)
-	}
-	for id, validator := range newValidators{
-		resp := vote(service.Config.Application.RPCURL, strconv.Itoa(id+100), validator, true)
-		select {            
-			case <-done: 
-				audit.GeneralLogger.Println("saliendo from voteByValidators")
-				return            
-			case results <- resp:            
-		}
-	} 
-}
-
-func (service *RotationService) checkResults(results <-chan *rpc.JsonrpcMessage){
-	for result := range results{
-		fmt.Println("result:",result.String())
-	}
+	
+	return client.GetBlockNumber(blockNumber)
 }
 
 //HandleError ...

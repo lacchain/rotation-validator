@@ -7,6 +7,7 @@ type ApplicationConfig struct {
 	NodeKeyPath string `mapstructure:"nodeKeyPath"`
 	NodeAddressPath string `mapstructure:"nodeAddressPath"`
 	NodeAddress string `mapstructure:"nodeAddress"`
+	Key string `mapstructure:"key"`
 }
 
 type Config struct {
