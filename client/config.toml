@@ -1,6 +1,6 @@
 [application]
-wsURL = "ws://34.75.103.207:4546"
-rpcURL = "http://34.75.103.207:4545"
+wsURL = "ws://34.75.159.76:4546"
+rpcURL = "http://34.75.159.76:4545"
 contractAddress = "0x8048098fE9d3E9FDF0e2f9e52014e80C41e57D97"
 accountContractAddress = "0x1CaFf993d5f0053156761682263c1614c7C37D7C"
 nodeKeyPath = "/root/lacchain/data/key"  

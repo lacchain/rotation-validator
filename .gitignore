@@ -3,3 +3,7 @@
 log/
 client/log
 server/log
+
+# Configuration File
+client/config.toml
+server/config.toml

@@ -92,7 +92,8 @@ func (service *RotationService) ProcessEvents(){
     for {
         select {
         case err := <-sub.Err():
-            HandleError(err)
+			audit.GeneralLogger.Println("WebSocket Failed")
+            audit.GeneralLogger.Fatal(err)
         case vLog := <-logs:
 			audit.GeneralLogger.Println("event:",vLog.Topics[0].Hex())
 			if vLog.Topics[0].Hex() == "0x"+eventRotationStarted {
@@ -113,9 +114,9 @@ func (service *RotationService) ProcessEvents(){
 func (service *RotationService) removeValidators(done <-chan interface{}, wg *sync.WaitGroup, results chan<- *rpc.JsonrpcMessage){
 	defer wg.Done()
 	client := new(bl.Client)
-	err := client.Connect(service.Config.Application.WSURL)
+	err := client.Connect(service.Config.Application.RPCURL)
 	if err != nil {
-		HandleError(err)
+		audit.GeneralLogger.Fatal(err)
 	}
 	defer client.Close()
 	oldValidators,err := client.GetOldValidators(common.HexToAddress(service.Config.Application.ContractAddress))
@@ -137,9 +138,9 @@ func (service *RotationService) removeValidators(done <-chan interface{}, wg *sy
 func (service *RotationService) voteByValidators(done <-chan interface{}, wg *sync.WaitGroup, results chan<- *rpc.JsonrpcMessage){
 	defer wg.Done()
 	client := new(bl.Client)
-	err := client.Connect(service.Config.Application.WSURL)
+	err := client.Connect(service.Config.Application.RPCURL)
 	if err != nil {
-		HandleError(err)
+		audit.GeneralLogger.Fatal(err)
 	}
 	defer client.Close()
 	newValidators,err := client.GetNewValidators(common.HexToAddress(service.Config.Application.ContractAddress))
