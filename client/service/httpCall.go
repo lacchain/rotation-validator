@@ -12,13 +12,13 @@ import(
 	"github.com/lacchain/rotation-validator/client/audit"
 )
 
-func vote(rpcURL string, id string, address string, kind bool) *rpc.JsonrpcMessage{
+func vote(rpcURL string, id string, address string, kind bool, _timeout int) *rpc.JsonrpcMessage{
 	data := fmt.Sprintf(`{"jsonrpc":"2.0","method":"ibft_proposeValidatorVote",
 	"params":["%s",%t], "id":"%s"}`,address,kind,id)
 
 	requestBody := []byte(data)
 
-	timeout := time.Duration(5*time.Second)
+	timeout := time.Duration(time.Duration(_timeout)*time.Second)
 	client := http.Client{
 		Timeout: timeout,
 	}

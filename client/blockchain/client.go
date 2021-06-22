@@ -24,7 +24,7 @@ func (ec *Client) Connect(nodeURL string) error {
 		return err
 	}
 
-	fmt.Sprintf("Connected to Ethereum Node:", nodeURL)
+	audit.GeneralLogger.Println("Connected to Ethereum Node:", nodeURL)
 	ec.client = client
 	return nil
 }
@@ -52,12 +52,12 @@ func (ec *Client) GetOldValidators(contractAddress common.Address)([]string, err
 
 	oldValidators, err := contract.GetRemovedValidators(&bind.CallOpts{})
 	if err != nil {
-		msg := "failed get old Validators"
+		msg := "failed get validators to remove"
 		err = errors.CallBlockchainFailed.Wrapf(err, msg, -32603)
 		return nil, err
 	}
 
-	fmt.Println("oldValidators:",len(oldValidators))
+	audit.GeneralLogger.Println("Number of validators to remove:",len(oldValidators))
 
 	validators := make([]string, len(oldValidators))
 
@@ -81,12 +81,12 @@ func (ec *Client) GetNewValidators(contractAddress common.Address)([]string, err
 
 	newValidators, err := contract.GetNewValidators(&bind.CallOpts{})
 	if err != nil {
-		msg := "failed get old Validators"
+		msg := "failed get new Validators"
 		err = errors.CallBlockchainFailed.Wrapf(err, msg, -32603)
 		return nil, err
 	}
 
-	fmt.Println("newValidators:",len(newValidators))
+	audit.GeneralLogger.Println("Number of validators to add:",len(newValidators))
 
 	validators := make([]string, len(newValidators))
 

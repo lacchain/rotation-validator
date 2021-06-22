@@ -8,7 +8,6 @@
 package service
 
 import (
-	"fmt"
 	"sync"
 	"context"
 	"strconv"
@@ -95,7 +94,7 @@ func (service *RotationService) ProcessEvents(){
 			audit.GeneralLogger.Println("WebSocket Failed")
             audit.GeneralLogger.Fatal(err)
         case vLog := <-logs:
-			audit.GeneralLogger.Println("event:",vLog.Topics[0].Hex())
+			audit.GeneralLogger.Println("event emited:",vLog.Topics[0].Hex())
 			if vLog.Topics[0].Hex() == "0x"+eventRotationStarted {
 				var wg sync.WaitGroup
 				results := make(chan *rpc.JsonrpcMessage)
@@ -124,11 +123,12 @@ func (service *RotationService) removeValidators(done <-chan interface{}, wg *sy
 		HandleError(err)
 	}
 	for id, validator := range oldValidators{
-		resp := vote(service.Config.Application.RPCURL, strconv.Itoa(id+10), validator, false)
+		audit.GeneralLogger.Println("removing validator:",validator)	
+		resp := vote(service.Config.Application.RPCURL, strconv.Itoa(id+10), validator, false, service.Config.Application.Timeout)
 		
 		select {            
 			case <-done: 
-				audit.GeneralLogger.Println("exiting from removeValidators")
+				audit.GeneralLogger.Println("quit signal received...exiting from vote to removeValidators")
 				return            
 			case results <- resp:            
 		}
@@ -148,10 +148,11 @@ func (service *RotationService) voteByValidators(done <-chan interface{}, wg *sy
 		HandleError(err)
 	}
 	for id, validator := range newValidators{
-		resp := vote(service.Config.Application.RPCURL, strconv.Itoa(id+100), validator, true)
+		audit.GeneralLogger.Println("adding validator:",validator)
+		resp := vote(service.Config.Application.RPCURL, strconv.Itoa(id+100), validator, true, service.Config.Application.Timeout)
 		select {            
 			case <-done: 
-				audit.GeneralLogger.Println("saliendo from voteByValidators")
+				audit.GeneralLogger.Println("quit signal received...exiting from voteByValidators")
 				return            
 			case results <- resp:            
 		}
@@ -160,7 +161,14 @@ func (service *RotationService) voteByValidators(done <-chan interface{}, wg *sy
 
 func (service *RotationService) checkResults(results <-chan *rpc.JsonrpcMessage){
 	for result := range results{
-		fmt.Println("result:",result.String())
+		executed,err:=strconv.ParseBool(string(result.Result))
+		if err != nil{
+			HandleError(err)
+			executed = false
+		}
+		if !executed{
+			audit.GeneralLogger.Println("Error voting:",result.String())	
+		}
 	}
 }
 
