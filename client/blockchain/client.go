@@ -50,7 +50,7 @@ func (ec *Client) GetOldValidators(contractAddress common.Address)([]string, err
 
 	audit.GeneralLogger.Println("Rotation Contract instanced:", contractAddress.Hex())
 
-	oldValidators, err := contract.GetOldValidators(&bind.CallOpts{})
+	oldValidators, err := contract.GetRemovedValidators(&bind.CallOpts{})
 	if err != nil {
 		msg := "failed get old Validators"
 		err = errors.CallBlockchainFailed.Wrapf(err, msg, -32603)
