@@ -62,7 +62,7 @@ func (ec *Client) GetOldValidators(contractAddress common.Address)([]string, err
 	validators := make([]string, len(oldValidators))
 
 	for i,validator := range oldValidators{
-		validators[i] = validator.Hex()[2:]
+		validators[i] = validator.Id.Hex()[2:]
 	}
 
 	return validators, nil
