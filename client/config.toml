@@ -1,8 +1,8 @@
 [application]
-wsURL = "ws://34.75.159.76:4546"
-rpcURL = "http://34.75.159.76:4545"
+wsURL = "ws://localhost:4546"
+rpcURL = "http://localhost:4545"
 timeout = 5
-contractAddress = "0x4c580660eFdFb422fB52a192F0A521B846635893"
+contractAddress = "0xA795f666ACe5cE2Bb42C70DB4775062587A08ae2"
 accountContractAddress = "0x1CaFf993d5f0053156761682263c1614c7C37D7C"
 nodeKeyPath = "/root/lacchain/data/key"  
 nodeAddressPath = "/root/lacchain/data/nodeAddress"
