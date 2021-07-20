@@ -25,7 +25,7 @@ Execute the executable file generated previously in a Validator node
 $ ./client
 ```
 
-## Copyright 2020 LACChain
+## Copyright 2021 LACChain
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
