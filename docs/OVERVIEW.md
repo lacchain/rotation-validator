@@ -40,7 +40,10 @@ Active validators must enable the rotation with their votes (to add and remove t
 
 In order to rotate nodes in a way that maximizes the performance and decentralization of the network, it is necessary to first understand the health and contribution of active validator nodes. This framework proposes doing this by calculating a Node Health Score, based in the following 5 metrics: 
 
-[TABLE 1]
+![table1](images/table1.png)
+<p align = "center">
+Table 1. KPIs evaluated in validator nodes.
+</p></br>
 
 The Node Health Score algorithm is as follows: 
 
@@ -53,9 +56,13 @@ The Node Health Score algorithm is as follows:
 
 Table 2 shows an example of 3 nodes being scored according to the Node Health Score algorithm. Table 3 shows the overall score for the same set of nodes and performances. 
 
-[TABLE 2]
+![Table2_example_nodes](images/table2.png "Table2") <p align = "center">
+Table 2. Example of scoring for three nodes. 
+</p></br></br>
 
-[TABLE 3]
+![Table3_overall score](images/table3.png "Table3")<p align = "center">
+Table 3. Example of overall score. 
+</p></br>
 
 ## 3.2. Rotation of Validator Nodes
 
@@ -77,7 +84,9 @@ The health check rounds are periodical checks on the validators’ performance. 
 
 In the example scores presented in Tables 2 and 3, node #2 would be identified as not hitting the online time percent threshold and node #3 would be identified as not hitting the block time threshold.
 
-[TABLE 4]
+![Table4_Thresholds](images/table4.png "Table4")<p align = "center">
+Table 4. Thresholds of minimum performance accepted.
+</p></br>
 
 ### 3.2.2. General Rotation Round
 
