@@ -1,6 +1,6 @@
 # Rotation Mechanism for Validator Nodes
 
-This component is a client used to rotate the validator nodes in LACChain network. 
+This component is a client used to rotate the validator nodes in LACChain networks. 
 
 ## Prerequisites
 
