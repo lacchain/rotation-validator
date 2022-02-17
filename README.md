@@ -1,6 +1,6 @@
-# Rotation Validator
+# Rotation Mechanism for Validator Nodes
 
-This component is a client used to rotate the validator nodes in LACChain network. To know more about this solution, please check this [documentation](docs/Architecture.md).
+This component is a client used to rotate the validator nodes in LACChain network. 
 
 ## Prerequisites
 
@@ -24,6 +24,11 @@ Execute the executable file generated previously in a Validator node
 ```
 $ ./client
 ```
+
+## Know More
+
+* [In depth overview of the rotation mechanism](https://github.com/lacchain/rotation-validator/blob/main/docs/OVERVIEW.md).
+* [Architecture](docs/Architecture.md).
 
 ## Copyright 2021 LACChain
 
