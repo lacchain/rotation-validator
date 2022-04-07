@@ -1,3 +1,5 @@
+# *** This repository has been deprecated and is no longer supported. We are now supporting [LACNet's branch](https://github.com/LACNetNetworks/rotation-validator). ***
+
 # Rotation Mechanism for Validator Nodes
 
 This component is a client used to rotate the validator nodes in LACChain networks. 
